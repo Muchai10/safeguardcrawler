@@ -1,73 +1,22 @@
-# Welcome to your Lovable project
+# SafeGuard Crawler
 
-## Project info
+> Early signals, safer spaces
 
-**URL**: https://lovable.dev/projects/45e7a942-649b-4820-b6af-8ec792611447
+SafeGuard Crawler is an ethical, automated monitoring pipeline that surfaces **early-warning signals of online harm** in Kenyan digital spaces, with a strong focus on **GBV-related abuse, cyber-harassment, and misinformation**.
 
-## How can I edit this code?
+It is built for **digital-safety NGOs, newsroom moderators, GBV helpline responders, and campus safety officers**, giving them a **4–6 hour head start** to act before harm escalates.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Key Idea
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/45e7a942-649b-4820-b6af-8ec792611447) and start prompting.
+> Safe, context-aware AI can close the detection gap between when harm starts and when humans finally see it.
 
-Changes made via Lovable will be committed automatically to this repo.
+SafeGuard Crawler:
 
-**Use your preferred IDE**
+- Scrapes **only permitted public sources** while respecting `robots.txt` and platform policies  
+- Runs **multilingual NLP** tuned for **English, Kiswahili, and Sheng**  
+- Detects **harmful threads and narratives early** using topic modeling, NER, sentiment & burst detection  
+- Sends **explainable alerts** to responders via a dashboard and notifications  
+- Protects users via **PII redaction, pseudonymization, encryption, and short retention windows**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/45e7a942-649b-4820-b6af-8ec792611447) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
