@@ -1,4 +1,4 @@
-# 🚨 SafeGuard Crawler
+# SafeGuard Crawler
 
 **Early signals, safer spaces**
 
@@ -10,7 +10,7 @@ This README integrates details from the project proposal and architecture docume
 
 ---
 
-# 📌 Key Idea
+# Key Idea
 
 > Safe, context-aware AI can close the detection gap between when harm starts and when humans finally see it.
 
@@ -25,7 +25,7 @@ SafeGuard Crawler works by:
 
 ---
 
-# 🧱 Tech Stack
+# Tech Stack
 
 ## **Frontend**
 
@@ -48,7 +48,7 @@ SafeGuard Crawler works by:
 
 ---
 
-# 🏗️ System Architecture (High-Level)
+# System Architecture (High-Level)
 
 ### 1. **Crawling Layer**
 
@@ -106,7 +106,7 @@ SafeGuard Crawler works by:
 
 ---
 
-# 🔄 Data Pipeline
+# Data Pipeline
 
 1. **Fetch** sources (news, blogs, public posts)
 2. **Normalize** text & metadata
@@ -120,32 +120,32 @@ SafeGuard Crawler works by:
 
 ---
 
-# 💡 Use Cases
+# Use Cases
 
-### 🛡️ NGOs & GBV Helplines
+### NGOs & GBV Helplines
 
 * Detect new harassment patterns
 * Identify hotspots for intervention
 * Allocate response resources faster
 
-### 🎓 Campuses & Youth Programs
+### Campuses & Youth Programs
 
 * Identify stalking, threats, sextortion targeting students
 * Campus-specific hotspot maps
 
-### 📰 Newsrooms
+### Newsrooms
 
 * Detect coordinated misinformation
 * Track trending harmful narratives
 
-### 🏛️ County Gender Desks
+### County Gender Desks
 
 * Real-time community-level GBV trends
 * County-level hotspot insights
 
 ---
 
-# 🧪 Model Capabilities
+# Model Capabilities
 
 ### Harm Detection
 
@@ -171,7 +171,7 @@ SafeGuard Crawler works by:
 
 ---
 
-# 🚀 Quickstart (Local Development)
+# Quickstart (Local Development)
 
 ### 1. Clone the repo
 
@@ -227,7 +227,7 @@ scrapy crawl sources_spider
 
 ---
 
-# 🗺️ Hotspot Mapping
+# Hotspot Mapping
 
 Hotspots are computed using:
 
@@ -245,7 +245,7 @@ Displayed using:
 
 ---
 
-# 📡 Alert Routing
+# Alert Routing
 
 ### High Severity (Auto-Forward)
 
@@ -270,23 +270,23 @@ Delivery channels:
   
 ---
 
-# 🔒 Security, Ethics & Compliance
+# Security, Ethics & Compliance
 
-* 💠 Only crawls **permitted public sources**
-* 💠 Respects **robots.txt** & platform TOS
-* 💠 Short retention windows
-* 💠 Optional PII redaction on ingest
-* 💠 All data encrypted at rest and in transit
-* 💠 Role-based access in dashboard
-* 💠 Transparent governance
-* 💠 Ethical red-teaming evaluations
+*  Only crawls **permitted public sources**
+*  Respects **robots.txt** & platform TOS
+*  Short retention windows
+*  Optional PII redaction on ingest
+*  All data encrypted at rest and in transit
+*  Role-based access in dashboard
+*  Transparent governance
+*  Ethical red-teaming evaluations
 
 (Full ethical guidelines are detailed in the project PDF.)
 
 
 ---
 
-# 🛂 Admin Management
+# Admin Management
 
 To add the first admin:
 
@@ -301,7 +301,7 @@ VALUES ('your-user-id', 'admin');
 
 ---
 
-# 🧭 Roadmap
+# Roadmap
 
 ### **MVP**
 
@@ -319,7 +319,7 @@ VALUES ('your-user-id', 'admin');
 
 ---
 
-# 🤝 Contributing
+# Contributing
 
 We welcome:
 
@@ -332,7 +332,7 @@ Submit PRs using `feature/<name>` branches.
 
 ---
 
-# 📞 Contact
+# Contact
 
 If you want to partner or test the system, reach out to the SafeGuard team or open an issue marked **“Partnership”**.
 
