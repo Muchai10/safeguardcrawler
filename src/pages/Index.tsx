@@ -4,6 +4,9 @@ import { HotspotMap } from '@/components/dashboard/HotspotMap';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { TrendsChart } from '@/components/dashboard/TrendsChart';
 import { DataSourcesPanel } from '@/components/dashboard/DataSourcesPanel';
+import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
+import { ControlPanel } from '@/components/dashboard/ControlPanel';
+import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
 import { mockIncidents, mockAlerts, mockTrendData, mockDataSources } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -114,28 +117,39 @@ const Index = () => {
           />
         </div>
 
-        {/* Main Content Grid */}
+        {/* Text Analysis & Control Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Map - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <TextAnalysis />
+          </div>
+          <div className="lg:col-span-1">
+            <ControlPanel />
+          </div>
+        </div>
+
+        {/* Live Alerts & Map */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
             <HotspotMap incidents={mockIncidents} />
           </div>
+          <div className="lg:col-span-1">
+            <LiveAlertsPanel />
+          </div>
+        </div>
 
-          {/* Alerts Panel */}
+        {/* Mock Alerts Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <TrendsChart data={mockTrendData} />
+          </div>
           <div className="lg:col-span-1">
             <AlertsPanel alerts={mockAlerts} />
           </div>
         </div>
 
-        {/* Bottom Section */}
+        {/* Data Sources Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Trends Chart - Takes 2 columns */}
           <div className="lg:col-span-2">
-            <TrendsChart data={mockTrendData} />
-          </div>
-
-          {/* Data Sources Panel */}
-          <div className="lg:col-span-1">
             <DataSourcesPanel sources={mockDataSources} />
           </div>
         </div>
