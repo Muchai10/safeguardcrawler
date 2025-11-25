@@ -20,3 +20,8 @@ supabase>=1.0.0
 
 # Optional: logging, pretty printing
 python-dotenv>=1.0.0
+
+tweepy>=4.14.0
+twscrape>=0.6.0
+scrapy>=2.11.0
+beautifulsoup4>=4.12.0
