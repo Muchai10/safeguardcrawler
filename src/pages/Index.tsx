@@ -1,4 +1,4 @@
-import { AlertTriangle, Activity, Eye, Shield, LogOut, UserCircle, Settings } from 'lucide-react';
+import { AlertTriangle, Activity, Eye, Shield } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { HotspotMap } from '@/components/dashboard/HotspotMap';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
@@ -8,26 +8,19 @@ import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
 import { ControlPanel } from '@/components/dashboard/ControlPanel';
 import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
 import { mockIncidents, mockAlerts, mockTrendData, mockDataSources } from '@/data/mockData';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useDashboardData, useScrapedArticles } from '@/hooks/useDashboardData';
 
 
 const Index = () => {
-  const { user, logout } = useAuth();
+  const { data: dashboardData, isLoading } = useDashboardData();
+  const { data: articles } = useScrapedArticles();
+  
   const highSeverityCount = mockIncidents.filter((i) => i.severity === 'high').length;
-  const mediumSeverityCount = mockIncidents.filter((i) => i.severity === 'medium').length;
-  const totalIncidents = mockIncidents.length;
-  const activeAlerts = mockAlerts.filter((a) => a.actionRequired).length;
+  const totalIncidents = dashboardData?.total_articles || 0;
+  const activeAlerts = dashboardData?.gbv_count || 0;
+  const activeMonitoring = Object.keys(dashboardData || {}).filter(key => 
+    key.includes('.') && dashboardData?.[key] > 0
+  ).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,42 +37,11 @@ const Index = () => {
                 Unified Early-Warning System & Hotspot Mapping
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 px-3 py-1 bg-green-500/10 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-medium text-green-700 dark:text-green-400">
-                  System Active
-                </span>
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <UserCircle className="w-4 h-4" />
-                    {user?.name || 'User'}
-                    <Badge variant="secondary" className="ml-1">{user?.role}</Badge>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {user?.role === 'admin' && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin" className="cursor-pointer">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center gap-1 px-3 py-1 bg-green-500/10 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                System Active
+              </span>
             </div>
           </div>
         </div>
@@ -111,7 +73,7 @@ const Index = () => {
           />
           <StatsCard
             title="Active Monitoring"
-            value={mockDataSources.filter((s) => s.status === 'active').length}
+            value={activeMonitoring}
             icon={Eye}
             severityColor="low"
           />
