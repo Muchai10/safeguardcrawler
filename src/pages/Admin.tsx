@@ -3,13 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAuth } from '@/contexts/AuthContext';
-import { Shield, Users, Settings, Database, Activity, Bell, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Shield, Users, Settings, Database, Activity, Bell, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Admin = () => {
-  const { user, logout } = useAuth();
-
   const mockUsers = [
     { id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', status: 'active' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'admin', status: 'active' },
@@ -44,17 +41,6 @@ const Admin = () => {
                   Main Dashboard
                 </Button>
               </Link>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <Badge variant="default" className="text-xs">
-                    {user?.role}
-                  </Badge>
-                </div>
-                <Button variant="ghost" size="sm" onClick={logout}>
-                  Logout
-                </Button>
-              </div>
             </div>
           </div>
         </div>
