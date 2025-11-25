@@ -62,12 +62,19 @@ jobs:
             hf-models-${{ runner.os }}-
 
       # 8. Run the scraper (your actual file name!)
-      - name: Run WebCrawler_V2.py
+      - name: Run WebCrawler_V2.py 
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           python WebCrawler_V2.py
+          
+      - name: Run twitter_crawler.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python twitter_crawler.py
 
       # 9. Upload the CSV as artifact (so you can download it from GitHub UI)
       - name: Upload scraped articles CSV
