@@ -1,0 +1,91 @@
+name: Nightly Scraper
+
+# Triggers
+on:
+  schedule:
+    # Every day at 00:00 EAT (Kenya time) → 21:00 UTC
+    - cron: '0 21 * * *'
+  workflow_dispatch:  # Allows manual run from GitHub UI
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60  # Safety: this job can take ~30-45 min with 15+ sites
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # 3. Cache pip packages (speeds up repeated runs)
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # 4. Install system dependencies + Google Chrome
+      - name: Install Chrome + dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg2 unzip xvfb libxi6 libgconf-2-4 libnss3 libgdk-pixbuf2.0-0 libgtk-3-0 libxss1 libasound2
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      # 5. Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 6. Download NLTK punkt (so your fallback works instantly)
+      - name: Download NLTK data
+        run: python -c "import nltk; nltk.download('punkt', quiet=True)"
+
+      # 7. Cache Hugging Face models (saves 5–15 min on cold starts)
+      - name: Cache Hugging Face models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            hf-models-${{ runner.os }}-
+
+      # 8. Run the scraper (your actual file name!)
+      - name: Run WebCrawler_V2.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python WebCrawler_V2.py
+
+      # 9. Upload the CSV as artifact (so you can download it from GitHub UI)
+      - name: Upload scraped articles CSV
+        if: always()  # Runs even if previous step fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraped-articles-${{ github.run_number }}
+          path: scraped_articles.csv
+          if-no-files-found: ignore
+
+      # 10. Optional: Show summary in job log
+      - name: Show results summary
+        if: always()
+        run: |
+          echo "Job finished!"
+          if [ -f scraped_articles.csv ]; then
+            echo "CSV generated: $(wc -l < scraped_articles.csv) lines"
+            head -20 scraped_articles.csv
+          else
+            echo "No CSV was created this run."
+          fi
