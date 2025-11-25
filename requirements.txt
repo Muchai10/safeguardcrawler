@@ -1,0 +1,22 @@
+# Web scraping and parsing
+selenium>=4.10.0
+webdriver-manager>=3.8.6
+beautifulsoup4>=4.12.2
+newspaper3k>=0.2.8
+lxml>=4.9.3
+requests>=2.31.0
+
+# Data handling
+pandas>=2.1.1
+numpy>=1.26.0
+
+# NLP
+nltk>=3.8.1
+transformers>=4.44.0
+torch>=2.1.0
+
+# Supabase client
+supabase>=1.0.0
+
+# Optional: logging, pretty printing
+python-dotenv>=1.0.0
