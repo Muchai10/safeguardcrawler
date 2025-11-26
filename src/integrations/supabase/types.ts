@@ -164,6 +164,48 @@ export type Database = {
         }
         Relationships: []
       }
+      twitter_alerts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: number
+          keyword_searched: string
+          scraped_at: string | null
+          sentiment: string | null
+          sentiment_score: number | null
+          threat_category: string | null
+          threat_level: number | null
+          tweet_url: string
+          username: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: number
+          keyword_searched: string
+          scraped_at?: string | null
+          sentiment?: string | null
+          sentiment_score?: number | null
+          threat_category?: string | null
+          threat_level?: number | null
+          tweet_url: string
+          username?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: number
+          keyword_searched?: string
+          scraped_at?: string | null
+          sentiment?: string | null
+          sentiment_score?: number | null
+          threat_category?: string | null
+          threat_level?: number | null
+          tweet_url?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
