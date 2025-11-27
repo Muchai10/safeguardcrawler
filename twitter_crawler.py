@@ -1,320 +1,243 @@
+import tweepy
 import os
-import warnings
 import time
+import hashlib
+import json
 import schedule
-from datetime import datetime
+import threading
+from datetime import datetime, timedelta
+from collections import deque
+from typing import List, Dict
 from dotenv import load_dotenv
 
-warnings.filterwarnings("ignore")
-load_dotenv()
-
-
-import pandas as pd
-import tweepy
-
-
+# AI/ML Dependencies
 try:
     from transformers import pipeline
     SENTIMENT_MODEL = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
     sentiment_pipeline = pipeline("sentiment-analysis", model=SENTIMENT_MODEL)
-    print("✅ Transformers loaded - sentiment analysis ready!")
-except ImportError as e:
-    print(f"⚠️ Install transformers: pip install transformers torch")
+    SENTIMENT_AVAILABLE = True
+    
+    NER_MODEL = "Davlan/bert-base-multilingual-cased-ner-hrl"
+    ner_pipeline = pipeline("ner", model=NER_MODEL, aggregation_strategy="simple")
+    NER_AVAILABLE = True
+except Exception:
     sentiment_pipeline = None
-except Exception as e:
-    print(f"⚠️ Failed to load sentiment model: {e}")
-    sentiment_pipeline = None
+    SENTIMENT_AVAILABLE = False
+    ner_pipeline = None
+    NER_AVAILABLE = False
 
+# Supabase
+try:
+    from supabase import create_client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
 
-from supabase import create_client, Client
+load_dotenv()
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# ============================================================================
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("⚠️ Supabase credentials not found in environment variables")
-    print("   Please set SUPABASE_URL and SUPABASE_KEY in .env file")
-    supabase = None
-else:
-    try:
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("✅ Supabase client initialized - database ready.")
-    except Exception as e:
-        print(f"❌ Supabase init failed: {e}")
-        supabase = None
+class Config:
+    TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+    MAX_RESULTS = 10
+    DELAY_BETWEEN_SEARCHES = (8, 15)
+    FREE_TIER_LIMIT = 150
+    RATE_WINDOW_MINUTES = 15
 
-TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
+    KENYAN_LOCATIONS = [
+        'nairobi', 'mombasa', 'kisumu', 'nakuru', 'eldoret', 'thika', 
+        'kakamega', 'machakos', 'kitui', 'meru', 'nyeri', 'kajiado', 'narok'
+    ]
 
-# Kenya threat keywords - prioritized
-KENYA_KEYWORDS = [
-    "nitakupiga", "kukuua", "napiga wewe",
-    "kill you", "attack you", "nitakuchapa"
-]
+    KEYWORDS = [
+        'kill you', 'kukuua', 'nitakuua', 'femicide', 'death threats',
+        'rape threats', 'sexual assault', 'unyanyasaji wa kijinsia',
+        'domestic violence', 'gbv', 'assault', 'kupigwa',
+        'stalking', 'blackmail', 'human trafficking'
+    ]
 
+# ============================================================================
 
-SCAN_INTERVAL_MINUTES = 15
-MAX_TWEETS_PER_KEYWORD = 10
-MAX_DAILY_SCANS = 96
+class DatabaseManager:
+    def __init__(self):
+        self.supabase = None
+        self.local_backup = deque(maxlen=1000)
+        self._connect()
 
+    def _connect(self):
+        if SUPABASE_AVAILABLE and Config.SUPABASE_URL and Config.SUPABASE_KEY:
+            try:
+                self.supabase = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
+            except Exception:
+                self.supabase = None
 
+    def save_threat(self, record: Dict):
+        if self.supabase:
+            try:
+                self.supabase.table("twitter_threats").upsert(record, on_conflict="tweet_hash").execute()
+            except Exception:
+                pass
+        self.local_backup.append({**record, "saved_at": datetime.now().isoformat()})
 
-def categorize_threat(text):
-    """
-    Categorizing tweets based on threat keywords - borrowed from news scraper's categorize_article logic
-    """
-    if not text:
-        return "neutral"
+    def export_backup(self, filename="safeguard_backup.json"):
+        if self.local_backup:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(list(self.local_backup), f, indent=2, ensure_ascii=False)
 
-    text_lower = text.lower()
+# ============================================================================
 
-    # English + Swahili threat keywords
-    high_threat = ['kill', 'kukuua', 'attack', 'shambulio', 'stab', 'choma', 'murder']
-    med_threat = ['beat', 'hurt', 'napiga', 'nitakupiga', 'nitakuchapa', 'threat', 'harm']
-    low_threat = ['insult', 'matusi', 'stupid', 'idiot']
+class ThreatAnalyzer:
+    @staticmethod
+    def analyze_threat(text: str) -> Dict:
+        lower = text.lower()
+        critical = ['kill', 'kukuua', 'nitakuua', 'murder', 'mauaji', 'kuuawa', 'attack', 'shambulio', 'stab', 'choma', 'shoot', 'piga risasi']
+        high = ['rape', 'assault', 'battery', 'kubaka', 'kutesa', 'femicide', 'death threat', 'tisho la kifo', 'violence', 'vurugu']
+        medium = ['beat', 'hurt', 'napiga', 'nitakupiga', 'threaten', 'harass', 'molest', 'stalk', 'blackmail', 'trafficking']
 
-    # Scoring similar to news scraper
-    if any(word in text_lower for word in high_threat):
-        return "high_threat"
-    elif any(word in text_lower for word in med_threat):
-        return "threat"
-    elif any(word in text_lower for word in low_threat):
-        return "harassment"
+        score, category = 0, "neutral"
+        if any(w in lower for w in critical):
+            score, category = 85, "critical_threat"
+        elif any(w in lower for w in high):
+            score, category = 75, "high_threat"
+        elif any(w in lower for w in medium):
+            score, category = 60, "medium_threat"
 
-    return "neutral"
+        if any(loc in lower for loc in Config.KENYAN_LOCATIONS):
+            score = min(95, score + 10)
+        return {"threat_score": score, "threat_category": category}
 
-
-def analyze_tweet(text):
-    """
-    Running sentiment analysis on tweet - borrowed from news scraper's analyze_article
-    """
-    if sentiment_pipeline is None:
-        return {"sentiment": "N/A", "sentiment_score": 0.0, "threat_level": 0}
-
-    try:
-        # Sentiment on first 512 chars (same as news scraper)
-        sent_text = text[:512]
-        sent = sentiment_pipeline(sent_text)[0]
-        sentiment_label = sent['label'].capitalize()
-        sentiment_score = round(sent['score'], 3)
-
-        # Calculate threat level (0-100)
-        category = categorize_threat(text)
-        threat_map = {"high_threat": 85, "threat": 65, "harassment": 40, "neutral": 0}
-        threat_level = threat_map.get(category, 0)
-
-        # Boost if Kenya location mentioned (like news scraper's category boost)
-        kenya_locations = ["nairobi", "kibera", "mathare", "mombasa", "kisumu", "nakuru"]
-        if any(loc in text.lower() for loc in kenya_locations):
-            threat_level = min(95, threat_level + 10)
-
-        return {
-            "sentiment": sentiment_label,
-            "sentiment_score": sentiment_score,
-            "threat_level": threat_level,
-            "threat_category": category
-        }
-    except Exception as e:
-        print(f"⚠️ Analysis error: {e}")
-        return {"sentiment": "N/A", "sentiment_score": 0.0, "threat_level": 0, "threat_category": "neutral"}
-
-
-def check_api_status():
-    """Check if Twitter API is available"""
-    if not TWITTER_BEARER_TOKEN:
-        print("❌ TWITTER_BEARER_TOKEN not found in environment")
-        print("   Please set it in your .env file")
-        return False
-
-    client = tweepy.Client(bearer_token=TWITTER_BEARER_TOKEN)
-
-    print("🔧 Checking Twitter API status...")
-    try:
-        client.search_recent_tweets(query="Kenya", max_results=10, tweet_fields=["text"])
-        print("✅ Twitter API is working!")
-        return True
-    except tweepy.TooManyRequests:
-        print("❌ Rate limited - wait 15 minutes")
-        return False
-    except tweepy.Unauthorized:
-        print("❌ Invalid API credentials")
-        return False
-    except Exception as e:
-        print(f"❌ API error: {e}")
-        return False
-
-
-
-def main_twitter_scraper():
-    """
-    Main scraper - pattern borrowed from news scraper's main_scraper function
-    Searches keywords, analyzes tweets, collects into DataFrame
-    """
-    if not TWITTER_BEARER_TOKEN:
-        print("❌ TWITTER_BEARER_TOKEN not set")
-        return pd.DataFrame()
-
-    data = []  # List to hold all tweet dicts (like news scraper)
-
-    client = tweepy.Client(
-        bearer_token=TWITTER_BEARER_TOKEN,
-        wait_on_rate_limit=True
-    )
-
-    print("\n🛡️ SafeGuard Kenya - Twitter Monitoring")
-    print("=" * 50)
-    print(f"⏰ Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    # Loop through keywords (like news scraper loops through sites)
-    for i, keyword in enumerate(KENYA_KEYWORDS):
-        print(f"\n🔍 [{i+1}/{len(KENYA_KEYWORDS)}] Searching: '{keyword}'")
-
+    @staticmethod
+    def analyze_sentiment(text: str) -> Dict:
+        if not SENTIMENT_AVAILABLE:
+            return {"sentiment": "N/A", "sentiment_score": 0.0}
         try:
-            # Build query (similar to news scraper's URL extraction)
-            query = f'"{keyword}" (Kenya OR Nairobi OR Mombasa) -is:retweet lang:en'
+            result = sentiment_pipeline(text[:512])[0]
+            label = result.get("label", "N/A").capitalize()
+            score = round(float(result.get("score", 0.0)), 3)
+            return {"sentiment": label, "sentiment_score": score}
+        except Exception:
+            return {"sentiment": "Error", "sentiment_score": 0.0}
 
-            tweets = client.search_recent_tweets(
+    @staticmethod
+    def analyze_entities(text: str) -> str:
+        if not NER_AVAILABLE:
+            return ""
+        try:
+            ents = ner_pipeline(text[:1400])
+            return " | ".join(set([f"{e['entity_group']}: {e['word']}" for e in ents if e['score'] > 0.8]))
+        except Exception:
+            return ""
+
+# ============================================================================
+
+class RateLimitTracker:
+    def __init__(self):
+        self.requests = deque(maxlen=Config.FREE_TIER_LIMIT)
+
+    def add_request(self):
+        self.requests.append(datetime.now())
+
+    def should_wait(self) -> float:
+        cutoff = datetime.now() - timedelta(minutes=Config.RATE_WINDOW_MINUTES)
+        recent = [r for r in self.requests if r > cutoff]
+        if len(recent) >= Config.FREE_TIER_LIMIT - 5:
+            oldest = min(self.requests)
+            wait_until = oldest + timedelta(minutes=Config.RATE_WINDOW_MINUTES)
+            return max(0, (wait_until - datetime.now()).total_seconds()) + 10
+        return 0
+
+# ============================================================================
+
+class TwitterClient:
+    def __init__(self):
+        if not Config.TWITTER_BEARER_TOKEN:
+            raise RuntimeError("Missing TWITTER_BEARER_TOKEN")
+        self.client = tweepy.Client(bearer_token=Config.TWITTER_BEARER_TOKEN, wait_on_rate_limit=True)
+        self.rate_tracker = RateLimitTracker()
+
+    def search_keyword(self, keyword: str) -> List:
+        wait_time = self.rate_tracker.should_wait()
+        if wait_time > 0:
+            time.sleep(wait_time)
+
+        location_string = " OR ".join(Config.KENYAN_LOCATIONS[:5])
+        query = f'"{keyword}" ({location_string}) -is:retweet lang:en OR lang:sw'
+        try:
+            response = self.client.search_recent_tweets(
                 query=query,
-                max_results=MAX_TWEETS_PER_KEYWORD,
-                tweet_fields=["text", "author_id", "created_at", "lang"]
+                max_results=Config.MAX_RESULTS,
+                tweet_fields=["id", "text", "created_at", "lang"]
             )
+            self.rate_tracker.add_request()
+            return response.data or []
+        except Exception:
+            return []
 
-            if tweets.data:
-                for tweet in tweets.data:
-                    text = tweet.text.strip()
+# ============================================================================
 
-                    # Skip very short tweets (like news scraper skips short articles)
-                    if len(text) < 20:
-                        continue
+class SafeGuardScanner:
+    def __init__(self):
+        self.db = DatabaseManager()
+        self.analyzer = ThreatAnalyzer()
+        self.twitter = TwitterClient() if Config.TWITTER_BEARER_TOKEN else None
 
-                    # Categorize and analyze (borrowed pattern)
-                    analysis = analyze_tweet(text)
+    def run(self):
+        if not self.twitter:
+            return
 
-                    # Only save tweets with threat_level > 50 (filtering like news scraper)
-                    if analysis["threat_level"] > 50:
-                        data.append({
-                            "keyword_searched": keyword,
-                            "tweet_url": f"https://twitter.com/user/status/{tweet.id}",
-                            "username": f"user_{tweet.author_id}",
-                            "content": text[:500],  # Limit like news scraper
-                            "created_at": tweet.created_at,
-                            "threat_category": analysis["threat_category"],
-                            "threat_level": analysis["threat_level"],
-                            "sentiment": analysis["sentiment"],
-                            "sentiment_score": analysis["sentiment_score"]
-                        })
-                        print(f"🚨 THREAT: {text[:60]}... (Level: {analysis['threat_level']})")
+        for keyword in Config.KEYWORDS:
+            tweets = self.twitter.search_keyword(keyword)
+            self._process_tweets(tweets, keyword)
+            time.sleep(random.uniform(*Config.DELAY_BETWEEN_SEARCHES))
 
-                print(f"✅ Processed {len(tweets.data)} tweets for '{keyword}'")
-            else:
-                print(f"ℹ️ No tweets found for '{keyword}'")
+    def _process_tweets(self, tweets: List, keyword: str):
+        for tweet in tweets:
+            threat = self.analyzer.analyze_threat(tweet.text)
+            if threat["threat_score"] <= 50:
+                continue
+            sentiment = self.analyzer.analyze_sentiment(tweet.text)
+            entities = self.analyzer.analyze_entities(tweet.text)
 
-            # Polite delay between searches (like news scraper)
-            if i < len(KENYA_KEYWORDS) - 1:
-                time.sleep(3)
+            record = {
+                "tweet_hash": hashlib.sha256(str(tweet.id).encode()).hexdigest()[:16],
+                "keyword_trigger": keyword,
+                "content": tweet.text[:500],
+                "created_at": str(tweet.created_at),
+                "threat_score": threat["threat_score"],
+                "threat_category": threat["threat_category"],
+                "sentiment_label": sentiment["sentiment"],
+                "sentiment_score": sentiment["sentiment_score"],
+                "entities": entities,
+                "location_boosted": any(loc in tweet.text.lower() for loc in Config.KENYAN_LOCATIONS)
+            }
+            self.db.save_threat(record)
 
-        except Exception as e:
-            print(f"❌ Error searching '{keyword}': {e}")
-            continue
+# ============================================================================
 
-    print(f"\n✅ Scraping complete. Found {len(data)} threats.")
-    return pd.DataFrame(data) if data else pd.DataFrame()
+# ----------------------- NEW ADDITIONS FOR MONITORING ----------------------
 
+SCAN_INTERVAL_MINUTES = 15  # adjust as needed
 
+def run_scan():
+    print("\n🚀 Starting scan at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    scanner = SafeGuardScanner()
+    scanner.run()
+    scanner.db.export_backup()
+    print("✅ Scan complete\n")
 
-def upload_to_supabase(df):
-    """
-    Upload to Supabase - exact same pattern as news scraper's upload function
-    """
-    if df.empty:
-        print("ℹ️ No data to upload")
-        return
+# Initial scan on startup
+run_scan()
 
-    if supabase is None:
-        print("⚠️ Supabase not initialized. Skipping upload.")
-        print("   Data saved to CSV only.")
-        return
+# Schedule continuous scans
+schedule.every(SCAN_INTERVAL_MINUTES).minutes.do(run_scan)
 
-    # Format dates
-    df['created_at'] = pd.to_datetime(df['created_at'], errors='coerce')
-
-    # Ensure columns match schema
-    cols = ["keyword_searched", "tweet_url", "username", "content", "created_at",
-            "threat_category", "threat_level", "sentiment", "sentiment_score"]
-    final_df = df[cols].copy()
-
-    # Convert to records
-    records = final_df.to_dict(orient="records")
-
-    # Local backup (like news scraper)
-    final_df.to_csv("twitter_threats.csv", index=False, encoding="utf-8")
-    print(f"💾 Saved backup: twitter_threats.csv ({len(final_df)} threats)")
-
-    # Upsert to Supabase
-    try:
-        response = supabase.table("twitter_alerts").upsert(records, on_conflict="tweet_url").execute()
-        print(f"✅ Uploaded {len(records)} records to 'twitter_alerts' table")
-    except Exception as e:
-        print(f"❌ Supabase upload failed: {e}")
-        print("   Data is saved in CSV file.")
-
-def run_scheduled_scan():
-    """Single scan execution - called by scheduler"""
-    print("\n" + "="*70)
-    print(f"🚀 Starting scan at {datetime.now().strftime('%H:%M:%S')}")
-    print("="*70)
-
-    # Check API first
-    if not check_api_status():
-        print("⏳ API not ready - skipping this scan")
-        return
-
-    # Run scraper
-    df = main_twitter_scraper()
-
-    # Upload results
-    if not df.empty:
-        upload_to_supabase(df)
-
-    # Next scan info
-    next_run = datetime.now().replace(second=0, microsecond=0)
-    next_run = next_run.replace(minute=(next_run.minute // SCAN_INTERVAL_MINUTES + 1) * SCAN_INTERVAL_MINUTES % 60)
-    if next_run.minute == 0:
-        next_run = next_run.replace(hour=(next_run.hour + 1) % 24)
-    print(f"\n⏰ Next scan scheduled for: {next_run.strftime('%H:%M:%S')}")
-
-
-
-if __name__ == "__main__":
-    print("="*70)
-    print("🛡️ SafeGuard Kenya - Twitter Threat Monitor")
-    print("="*70)
-    print(f"📋 Scan Interval: Every {SCAN_INTERVAL_MINUTES} minutes")
-    print(f"📊 Daily Limit: {MAX_DAILY_SCANS} scans")
-    print(f"⏰ Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70)
-
-    # Schedule the job
-    schedule.every(SCAN_INTERVAL_MINUTES).minutes.do(run_scheduled_scan)
-
-    # Run immediately on startup
-    print("\n🚀 Running initial scan...")
-    run_scheduled_scan()
-
-    # Keep running
-    try:
-        scan_count = 0
-        while True:
-            schedule.run_pending()
-            time.sleep(30)  # Check every 30 seconds
-
-            # Daily limit check
-            scan_count += 1
-            if scan_count >= MAX_DAILY_SCANS:
-                print(f"\n⏸️ Daily scan limit reached ({MAX_DAILY_SCANS})")
-                print("Waiting until midnight to reset...")
-                time.sleep(3600)  # Wait an hour then check again
-
-    except KeyboardInterrupt:
-        print("\n\n👋 Monitoring stopped by user")
-        print(f"⏰ Stopped at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+# Keep running
+try:
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+except KeyboardInterrupt:
+    print("\n👋 Monitoring stopped by user")
