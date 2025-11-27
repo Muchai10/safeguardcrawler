@@ -4,7 +4,7 @@ import time
 import hashlib
 import json
 import schedule
-import threading
+import random
 from datetime import datetime, timedelta
 from collections import deque
 from typing import List, Dict
@@ -16,7 +16,7 @@ try:
     SENTIMENT_MODEL = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
     sentiment_pipeline = pipeline("sentiment-analysis", model=SENTIMENT_MODEL)
     SENTIMENT_AVAILABLE = True
-    
+
     NER_MODEL = "Davlan/bert-base-multilingual-cased-ner-hrl"
     ner_pipeline = pipeline("ner", model=NER_MODEL, aggregation_strategy="simple")
     NER_AVAILABLE = True
@@ -77,6 +77,9 @@ class DatabaseManager:
     def save_threat(self, record: Dict):
         if self.supabase:
             try:
+                # Convert created_at to string if it's datetime for JSON safety
+                if isinstance(record.get("created_at"), datetime):
+                    record["created_at"] = record["created_at"].isoformat()
                 self.supabase.table("twitter_threats").upsert(record, on_conflict="tweet_hash").execute()
             except Exception:
                 pass
@@ -217,16 +220,16 @@ class SafeGuardScanner:
 
 # ============================================================================
 
-# ----------------------- NEW ADDITIONS FOR MONITORING ----------------------
+# ----------------------- MONITORING LOGIC ----------------------
 
 SCAN_INTERVAL_MINUTES = 15  # adjust as needed
 
 def run_scan():
-    print("\n🚀 Starting scan at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print("\n Starting scan at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     scanner = SafeGuardScanner()
     scanner.run()
     scanner.db.export_backup()
-    print("✅ Scan complete\n")
+    print(" Scan complete\n")
 
 # Initial scan on startup
 run_scan()
@@ -234,10 +237,10 @@ run_scan()
 # Schedule continuous scans
 schedule.every(SCAN_INTERVAL_MINUTES).minutes.do(run_scan)
 
-# Keep running
+
 try:
     while True:
         schedule.run_pending()
         time.sleep(10)
 except KeyboardInterrupt:
-    print("\n👋 Monitoring stopped by user")
+    print("\n Monitoring stopped by user")
