@@ -77,15 +77,7 @@ const Index = () => {
           />
         </div>
 
-        {/* Text Analysis & Control Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <TextAnalysis />
-          </div>
-          <div className="lg:col-span-1">
-            <ControlPanel />
-          </div>
-        </div>
+
 
         {/* Live Alerts & Map */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
