@@ -56,7 +56,6 @@ const Index = () => {
             value={activeAlerts}
             icon={AlertTriangle}
             severityColor="high"
-            trend={{ value: '12% from yesterday', isPositive: false }}
           />
           <StatsCard
             title="High Severity Incidents"
@@ -69,7 +68,6 @@ const Index = () => {
             value={totalIncidents}
             icon={Activity}
             severityColor="default"
-            trend={{ value: '8% from yesterday', isPositive: true }}
           />
           <StatsCard
             title="Active Monitoring"
