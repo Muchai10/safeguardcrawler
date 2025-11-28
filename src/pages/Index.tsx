@@ -1,18 +1,14 @@
 'use client';
 
-import { Shield, AlertTriangle, Activity, Eye, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Shield, AlertTriangle, Activity, Eye } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { ScraperStatusPanel } from '@/components/dashboard/ScraperStatusPanel';
 import { DataSummaryCard } from '@/components/dashboard/DataSummaryCard';
 import { ConnectionStatus } from '@/components/dashboard/ConnectionStatus';
 import { useAlerts, useScraperStatus } from '@/hooks/useHuggingFaceData';
-import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
-  const queryClient = useQueryClient();
-
   // Fetch alerts (limit 50)
   const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useAlerts(50);
   const { data: status, isLoading: statusLoading, isError: statusError } = useScraperStatus();
@@ -23,11 +19,6 @@ const Index = () => {
   const highSeverity = alerts.filter(a => a.severity === 'high').length;
   const mediumSeverity = alerts.filter(a => a.severity === 'medium').length;
   const totalAlerts = alerts.length;
-
-  const handleRefreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['hf-alerts'] });
-    queryClient.invalidateQueries({ queryKey: ['hf-scraper-status'] });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,17 +35,11 @@ const Index = () => {
                 Real-time data from HuggingFace Space API
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={handleRefreshAll}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh All
-              </Button>
-              <div className="flex items-center gap-1 px-3 py-1 bg-emerald-500/10 rounded-full">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                  Live
-                </span>
-              </div>
+            <div className="flex items-center gap-1 px-3 py-1 bg-emerald-500/10 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                Live
+              </span>
             </div>
           </div>
         </div>
