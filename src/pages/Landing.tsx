@@ -81,6 +81,7 @@ const Landing = () => {
               <Link to="/"><Button variant="ghost" size="sm">Home</Button></Link>
               <Link to="/about"><Button variant="ghost" size="sm">About</Button></Link>
               <Link to="/contact"><Button variant="ghost" size="sm">Contact</Button></Link>
+              <Link to="/reviews"><Button variant="ghost" size="sm">Complaints</Button></Link>
               <Link to="/dashboard"><Button variant="outline" size="sm">Dashboard</Button></Link>
             </nav>
           </div>
@@ -97,15 +98,26 @@ const Landing = () => {
             AI-powered monitoring for GBV-related abuse, cyber-harassment, and misinformation in Kenyan digital spaces.
             Built for NGOs, newsrooms, and safety responders.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/dashboard">
-              <Button size="lg" className="text-lg px-8 hover-scale">
-                Get Started
+
+          {/* Three Main Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center max-w-4xl mx-auto">
+            <Link to="/news" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-10 py-6">
+                News Articles
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 hover-scale">
-              Learn More
-            </Button>
+
+            <Link to="/dashboard" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto text-lg px-12 py-6 hover-scale shadow-lg">
+                Analytics
+              </Button>
+            </Link>
+
+            <Link to="/socials" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-10 py-6">
+                Social Media
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -218,18 +230,20 @@ const Landing = () => {
         <Card className="max-w-4xl mx-auto border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-8 lg:p-12 text-center">
             <Shield className="w-16 h-16 text-primary mx-auto mb-6" />
-            <h3 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h3 className="text-3xl lg:text-4xl font-bold mb-4 text-center">
               Ready to Protect Your Community?
             </h3>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto text-center">
               Join digital-safety NGOs, newsroom moderators, and GBV helpline responders using SafeGuard Crawler
               to detect threats before they escalate.
             </p>
-            <Link to="/dashboard">
-              <Button size="lg" className="text-lg px-12 hover-scale">
-                Get Started Now
-              </Button>
-            </Link>
+            <div className="flex justify-center">
+              <Link to="/dashboard">
+                <Button size="lg" className="text-lg px-12 hover-scale">
+                  Access Analytics Now
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </section>
