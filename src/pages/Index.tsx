@@ -1,67 +1,25 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, Activity, Eye, Shield, RefreshCw } from "lucide-react";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { HotspotMap } from "@/components/dashboard/HotspotMap";
-import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
-import { TrendsChart } from "@/components/dashboard/TrendsChart";
-import { DataSourcesPanel } from "@/components/dashboard/DataSourcesPanel";
-import { TextAnalysis } from "@/components/dashboard/TextAnalysis";
-import { ControlPanel } from "@/components/dashboard/ControlPanel";
-import { LiveAlertsPanel } from "@/components/dashboard/LiveAlertsPanel";
-import { mockIncidents, mockTrendData, mockDataSources } from "@/data/mockData";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { AlertTriangle, Activity, Eye, Shield } from 'lucide-react';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { HotspotMap } from '@/components/dashboard/HotspotMap';
+import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
+import { TrendsChart } from '@/components/dashboard/TrendsChart';
+import { DataSourcesPanel } from '@/components/dashboard/DataSourcesPanel';
+import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
+import { ControlPanel } from '@/components/dashboard/ControlPanel';
+import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
+import { mockIncidents, mockAlerts, mockTrendData, mockDataSources } from '@/data/mockData';
+import { useDashboardData, useScrapedArticles } from '@/hooks/useDashboardData';
 
-const API_BASE = "https://crawlersco-safeguardcrawler.hf.space";
-
-interface Alert {
-  id: number;
-  title: string;
-  content: string;
-  threat_level: number;
-}
 
 const Index = () => {
   const { data: dashboardData, isLoading } = useDashboardData();
-
-  const [liveAlerts, setLiveAlerts] = useState<Alert[]>([]);
-  const [loadingAlerts, setLoadingAlerts] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string>("");
-
-  const fetchAlerts = async () => {
-    setLoadingAlerts(true);
-    try {
-      const res = await fetch(`${API_BASE}/alerts?limit=10`);
-      const data = await res.json();
-      setLiveAlerts(data);
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (error) {
-      console.error("Error fetching alerts:", error);
-    } finally {
-      setLoadingAlerts(false);
-    }
-  };
-
-  const runScraper = async () => {
-    try {
-      await fetch(`${API_BASE}/run-news-scraper`, { method: "POST" });
-      alert("Scraper started!");
-    } catch (error) {
-      console.error("Error running scraper:", error);
-    }
-  };
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    fetchAlerts(); // initial fetch
-    const interval = setInterval(fetchAlerts, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const highSeverityCount = liveAlerts.filter((i) => i.threat_level === 3).length;
+  const { data: articles } = useScrapedArticles();
+  
+  const highSeverityCount = mockIncidents.filter((i) => i.severity === 'high').length;
   const totalIncidents = dashboardData?.total_articles || 0;
   const activeAlerts = dashboardData?.gbv_count || 0;
-  const activeMonitoring = Object.keys(dashboardData || {}).filter((key) =>
-    key.includes(".") && dashboardData?.[key] > 0
+  const activeMonitoring = Object.keys(dashboardData || {}).filter(key => 
+    key.includes('.') && dashboardData?.[key] > 0
   ).length;
 
   return (
@@ -137,35 +95,17 @@ const Index = () => {
             <HotspotMap incidents={mockIncidents} />
           </div>
           <div className="lg:col-span-1">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Live Alerts</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  className={`flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition`}
-                  onClick={fetchAlerts}
-                  disabled={loadingAlerts}
-                >
-                  <RefreshCw className={`w-4 h-4 ${loadingAlerts ? 'animate-spin' : ''}`} />
-                  {loadingAlerts ? "Refreshing..." : "Refresh Now"}
-                </button>
-                {lastUpdated && (
-                  <span className="text-xs text-muted-foreground">
-                    Last updated: {lastUpdated}
-                  </span>
-                )}
-              </div>
-            </div>
-            <LiveAlertsPanel alerts={liveAlerts} />
+            <LiveAlertsPanel />
           </div>
         </div>
 
-        {/* Trends & Alerts Panel */}
+        {/* Mock Alerts Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
             <TrendsChart data={mockTrendData} />
           </div>
           <div className="lg:col-span-1">
-            <AlertsPanel alerts={liveAlerts} />
+            <AlertsPanel alerts={mockAlerts} />
           </div>
         </div>
 
