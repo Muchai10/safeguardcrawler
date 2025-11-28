@@ -1,31 +1,47 @@
 'use client';
 
+import useSWR from 'swr';
 import { AlertTriangle, Activity, Eye, Shield } from 'lucide-react';
+
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { HotspotMap } from '@/components/dashboard/HotspotMap';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { TrendsChart } from '@/components/dashboard/TrendsChart';
-import { DataSourcesPanel } from '@/components/dashboard/DataSourcesPanel';
-import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
-import { ControlPanel } from '@/components/dashboard/ControlPanel';
 import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
-import { useAlerts, useScraperStatus } from '@/hooks/useHuggingFaceData';
+import { ControlPanel } from '@/components/dashboard/ControlPanel';
+import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
 
-const Index = () => {
-  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useAlerts(50);
-  const { data: status, isLoading: statusLoading, isError: statusError } = useScraperStatus();
+const fetcher = (url: string) =>
+  fetch(url).then((res) => res.json());
 
-  if (alertsError) console.error('Error fetching alerts:', alertsError);
-  if (statusError) console.error('Error fetching scraper status:', statusError);
+export default function Index() {
 
-  const highSeverityCount = alerts.filter((a) => a.severity === 'high').length;
+  // --- API DATA ---
+  const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useSWR(
+    '/alerts?limit=50',
+    fetcher,
+    { refreshInterval: 8000 } // auto-refresh every 8s
+  );
+
+  const { data: status = {}, isLoading: statusLoading, error: statusError } = useSWR(
+    '/scraper-status',
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+
+  if (alertsError) console.error('Alerts error:', alertsError);
+  if (statusError) console.error('Status error:', statusError);
+
+  // --- CALCULATED METRICS ---
+  const highSeverityCount = alerts.filter((a: any) => a.severity === 'high').length;
   const totalIncidents = alerts.length;
-  const activeAlerts = alerts.filter((a) => a.isActive).length || totalIncidents; // fallback
-  const activeMonitoring = Object.keys(status || {}).filter(key => status?.[key] > 0).length;
+  const activeAlerts = alerts.filter((a: any) => a.isActive).length || totalIncidents;
+  const activeMonitoring = Object.keys(status || {}).filter((k) => status[k] > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+
+      {/* HEADER */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -38,6 +54,7 @@ const Index = () => {
                 Unified Early-Warning System & Hotspot Mapping
               </p>
             </div>
+
             <div className="flex items-center gap-1 px-3 py-1 bg-green-500/10 rounded-full">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-medium text-green-700 dark:text-green-400">
@@ -48,9 +65,10 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Dashboard */}
+      {/* MAIN */}
       <main className="container mx-auto px-4 py-6">
-        {/* Stats Row */}
+
+        {/* STATS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Active Alerts"
@@ -78,27 +96,27 @@ const Index = () => {
           />
         </div>
 
-        {/* Alerts Panel & Trends */}
+        {/* TRENDS + ALERTS PANEL */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <TrendsChart data={alerts} /> {/* Use alerts as trend data */}
+            <TrendsChart data={alerts} />
           </div>
           <div className="lg:col-span-1">
             <AlertsPanel alerts={alerts} />
           </div>
         </div>
 
-        {/* Live Alerts & Hotspot Map */}
+        {/* LIVE ALERTS + HOTSPOT MAP */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <HotspotMap incidents={alerts} /> {/* Map alerts as incidents */}
+            <HotspotMap incidents={alerts} />
           </div>
           <div className="lg:col-span-1">
             <LiveAlertsPanel alerts={alerts} />
           </div>
         </div>
 
-        {/* Footer Info */}
+        {/* FOOTER INFO */}
         <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -106,17 +124,15 @@ const Index = () => {
               <h3 className="font-semibold text-sm mb-1">About This System</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 This dashboard represents the Unified GBV Threat Intelligence & Hotspot Early-Warning Engine.
-                It combines real-time online GBV signal detection, location-based hotspot mapping, and sextortion
-                monitoring into one platform. The system uses ethical web crawling, NLP processing, and a 3-tier
-                severity scoring system to identify threats and provide actionable alerts to NGOs, campus security,
-                and county safety offices across Kenya.
+                It combines real-time online GBV signal detection, hotspot mapping, and monitoring into one platform.
+                The system uses ethical web crawling, NLP, and a multi-tier severity scoring system to deliver
+                actionable intelligence across Kenya.
               </p>
             </div>
           </div>
         </div>
+
       </main>
     </div>
   );
-};
-
-export default Index;
+}
