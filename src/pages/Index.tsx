@@ -1,3 +1,5 @@
+'use client';
+
 import { AlertTriangle, Activity, Eye, Shield } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { HotspotMap } from '@/components/dashboard/HotspotMap';
@@ -7,20 +9,19 @@ import { DataSourcesPanel } from '@/components/dashboard/DataSourcesPanel';
 import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
 import { ControlPanel } from '@/components/dashboard/ControlPanel';
 import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
-import { mockIncidents, mockAlerts, mockTrendData, mockDataSources } from '@/data/mockData';
-import { useDashboardData, useScrapedArticles } from '@/hooks/useDashboardData';
-
+import { useAlerts, useScraperStatus } from '@/hooks/useHuggingFaceData';
 
 const Index = () => {
-  const { data: dashboardData, isLoading } = useDashboardData();
-  const { data: articles } = useScrapedArticles();
+  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useAlerts(50);
+  const { data: status, isLoading: statusLoading, isError: statusError } = useScraperStatus();
 
-  const highSeverityCount = mockIncidents.filter((i) => i.severity === 'high').length;
-  const totalIncidents = dashboardData?.total_articles || 0;
-  const activeAlerts = dashboardData?.gbv_count || 0;
-  const activeMonitoring = Object.keys(dashboardData || {}).filter(key =>
-    key.includes('.') && dashboardData?.[key] > 0
-  ).length;
+  if (alertsError) console.error('Error fetching alerts:', alertsError);
+  if (statusError) console.error('Error fetching scraper status:', statusError);
+
+  const highSeverityCount = alerts.filter((a) => a.severity === 'high').length;
+  const totalIncidents = alerts.length;
+  const activeAlerts = alerts.filter((a) => a.isActive).length || totalIncidents; // fallback
+  const activeMonitoring = Object.keys(status || {}).filter(key => status?.[key] > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,47 +54,47 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Active Alerts"
-            value={activeAlerts}
+            value={alertsLoading ? '...' : activeAlerts}
             icon={AlertTriangle}
             severityColor="high"
           />
           <StatsCard
             title="High Severity Incidents"
-            value={highSeverityCount}
+            value={alertsLoading ? '...' : highSeverityCount}
             icon={AlertTriangle}
             severityColor="high"
           />
           <StatsCard
             title="Total Incidents (24h)"
-            value={totalIncidents}
+            value={alertsLoading ? '...' : totalIncidents}
             icon={Activity}
             severityColor="default"
           />
           <StatsCard
             title="Active Monitoring"
-            value={activeMonitoring}
+            value={statusLoading ? '...' : activeMonitoring}
             icon={Eye}
             severityColor="low"
           />
         </div>
 
-        {/* Mock Alerts Panel */}
+        {/* Alerts Panel & Trends */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <TrendsChart data={mockTrendData} />
+            <TrendsChart data={alerts} /> {/* Use alerts as trend data */}
           </div>
           <div className="lg:col-span-1">
-            <AlertsPanel alerts={mockAlerts} />
+            <AlertsPanel alerts={alerts} />
           </div>
         </div>
 
-          {/* Live Alerts & Map */}
+        {/* Live Alerts & Hotspot Map */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <HotspotMap incidents={mockIncidents} />
+            <HotspotMap incidents={alerts} /> {/* Map alerts as incidents */}
           </div>
           <div className="lg:col-span-1">
-            <LiveAlertsPanel />
+            <LiveAlertsPanel alerts={alerts} />
           </div>
         </div>
 
