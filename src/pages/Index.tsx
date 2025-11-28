@@ -77,18 +77,6 @@ const Index = () => {
           />
         </div>
 
-
-
-        {/* Live Alerts & Map */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <HotspotMap incidents={mockIncidents} />
-          </div>
-          <div className="lg:col-span-1">
-            <LiveAlertsPanel />
-          </div>
-        </div>
-
         {/* Mock Alerts Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
@@ -96,6 +84,16 @@ const Index = () => {
           </div>
           <div className="lg:col-span-1">
             <AlertsPanel alerts={mockAlerts} />
+          </div>
+        </div>
+
+          {/* Live Alerts & Map */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <HotspotMap incidents={mockIncidents} />
+          </div>
+          <div className="lg:col-span-1">
+            <LiveAlertsPanel />
           </div>
         </div>
 
