@@ -119,6 +119,27 @@ export type Database = {
         }
         Relationships: []
       }
+      email_subscribers: {
+        Row: {
+          email: string
+          id: number
+          is_active: boolean | null
+          subscribed_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: number
+          is_active?: boolean | null
+          subscribed_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: number
+          is_active?: boolean | null
+          subscribed_at?: string | null
+        }
+        Relationships: []
+      }
       scraped_articles: {
         Row: {
           article_url: string
@@ -161,6 +182,48 @@ export type Database = {
           site_url?: string
           summary_snippet?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      twitter_alerts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: number
+          keyword_searched: string
+          scraped_at: string | null
+          sentiment: string | null
+          sentiment_score: number | null
+          threat_category: string | null
+          threat_level: number | null
+          tweet_url: string
+          username: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: number
+          keyword_searched: string
+          scraped_at?: string | null
+          sentiment?: string | null
+          sentiment_score?: number | null
+          threat_category?: string | null
+          threat_level?: number | null
+          tweet_url: string
+          username?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: number
+          keyword_searched?: string
+          scraped_at?: string | null
+          sentiment?: string | null
+          sentiment_score?: number | null
+          threat_category?: string | null
+          threat_level?: number | null
+          tweet_url?: string
+          username?: string | null
         }
         Relationships: []
       }

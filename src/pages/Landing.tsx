@@ -1,10 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Shield, AlertTriangle, Eye, Activity, TrendingUp, MapPin, Bell, Lock } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, Activity, TrendingUp, MapPin, Bell, Lock, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Autoplay from 'embla-carousel-autoplay';
 import { useRef } from 'react';
+import { NewsletterSubscribe } from '@/components/NewsletterSubscribe';
+import citizensImg from '@/assets/citizens-digital.jpg';
+import safetyNetworkImg from '@/assets/safety-network.jpg';
 
 const Landing = () => {
   const plugin = useRef(
@@ -67,18 +70,19 @@ const Landing = () => {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <Shield className="w-8 h-8 text-primary" />
               <div>
                 <h1 className="text-xl font-bold">SafeGuard Crawler</h1>
                 <p className="text-xs text-muted-foreground">Early signals, safer spaces</p>
               </div>
-            </div>
-            <Link to="/dashboard">
-              <Button variant="outline" size="sm">
-                Dashboard
-              </Button>
             </Link>
+            <nav className="hidden md:flex items-center gap-4">
+              <Link to="/"><Button variant="ghost" size="sm">Home</Button></Link>
+              <Link to="/about"><Button variant="ghost" size="sm">About</Button></Link>
+              <Link to="/contact"><Button variant="ghost" size="sm">Contact</Button></Link>
+              <Link to="/dashboard"><Button variant="outline" size="sm">Dashboard</Button></Link>
+            </nav>
           </div>
         </div>
       </header>
@@ -141,9 +145,33 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Citizens Section with Image */}
       <section className="bg-muted/30 py-16 lg:py-24">
         <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto mb-16">
+            <div>
+              <img 
+                src={citizensImg} 
+                alt="Kenyan citizens using digital devices for safer communities" 
+                className="rounded-lg shadow-xl w-full"
+              />
+            </div>
+            <div>
+              <h3 className="text-3xl lg:text-4xl font-bold mb-6">
+                Protecting Communities Through Technology
+              </h3>
+              <p className="text-lg text-muted-foreground mb-6">
+                SafeGuard Crawler monitors digital spaces to identify threats before they escalate, 
+                helping protect vulnerable communities across Kenya.
+              </p>
+              <img 
+                src={safetyNetworkImg} 
+                alt="Digital safety network visualization" 
+                className="rounded-lg shadow-lg w-full"
+              />
+            </div>
+          </div>
+
           <h3 className="text-3xl lg:text-4xl font-bold text-center mb-12">
             Powerful Features for Digital Safety
           </h3>
@@ -164,6 +192,24 @@ const Landing = () => {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="bg-muted/30 py-16 lg:py-24">
+        <div className="container mx-auto px-4">
+          <Card className="max-w-3xl mx-auto border-2 border-primary/20">
+            <CardContent className="p-8 lg:p-12 text-center">
+              <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h3 className="text-2xl lg:text-3xl font-bold mb-4">
+                Stay Updated
+              </h3>
+              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+                Subscribe to receive updates on new features, threat insights, and digital safety tips.
+              </p>
+              <NewsletterSubscribe />
+            </CardContent>
+          </Card>
         </div>
       </section>
 
