@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
@@ -17,7 +18,6 @@ import Socials from "./pages/Socials";
 
 const queryClient = new QueryClient();
 
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -25,17 +25,23 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Pages */}
           <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/news" element={<News />} />
           <Route path="/socials" element={<Socials />} />
-        <Route path="/category/:category" element={<CategoryPage />} />
-        <Route path="/source/:source" element={<CategoryPage />} />
+
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<Index />} />
+          <Route path="/admin" element={<Admin />} />
+
+          {/* Category Pages */}
+          <Route path="/category/:category" element={<CategoryPage />} />
+          <Route path="/source/:source" element={<CategoryPage />} />
+
+          {/* Catch-all for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

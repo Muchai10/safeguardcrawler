@@ -1,3 +1,5 @@
+'use client';
+
 import { Shield, AlertTriangle, Activity, Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -10,8 +12,13 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
   const queryClient = useQueryClient();
-  const { data: alerts = [], isLoading: alertsLoading } = useAlerts(50);
-  const { data: status, isLoading: statusLoading } = useScraperStatus();
+
+  // Fetch alerts (limit 50)
+  const { data: alerts = [], isLoading: alertsLoading, isError: alertsError } = useAlerts(50);
+  const { data: status, isLoading: statusLoading, isError: statusError } = useScraperStatus();
+
+  if (alertsError) console.error('Error fetching alerts:', alertsError);
+  if (statusError) console.error('Error fetching scraper status:', statusError);
 
   const highSeverity = alerts.filter(a => a.severity === 'high').length;
   const mediumSeverity = alerts.filter(a => a.severity === 'medium').length;
@@ -91,7 +98,7 @@ const Index = () => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Alerts Panel - Takes 2 columns */}
+          {/* Alerts Panel */}
           <div className="lg:col-span-2">
             <AlertsPanel />
           </div>
@@ -110,7 +117,7 @@ const Index = () => {
             <div>
               <h3 className="font-semibold text-sm mb-1">API Connection</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Connected to: <code className="bg-muted px-1 py-0.5 rounded">https://crawlersco-safeguardcrawler.hf.space</code>
+                Connected to: <code className="bg-muted px-1 py-0.5 rounded">{process.env.NEXT_PUBLIC_HF_API_URL}</code>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Endpoints: /alerts, /scraper-status, /run-news-scraper
