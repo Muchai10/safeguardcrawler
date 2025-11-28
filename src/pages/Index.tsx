@@ -169,6 +169,13 @@ const Index = () => {
           </div>
         </div>
 
+         {/* Data Sources Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <DataSourcesPanel sources={mockDataSources} />
+          </div>
+        </div>
+        
         {/* Footer Info */}
         <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
           <div className="flex items-start gap-3">
