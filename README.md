@@ -9,7 +9,7 @@ The Live Links
 
 > https://safeguardcrawler-sahw.vercel.app/
 > 
-> https://huggingface.co/datasets/Iamparody/gbv-threat-alerts/tree/main
+> https://huggingface.co/spaces/Iamparody/safe-guard-crawler
 
 ---
 
