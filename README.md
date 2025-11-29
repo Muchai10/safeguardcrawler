@@ -93,9 +93,6 @@ SafeGuard Crawler works by:
 ### 7. **Alerting**
 
 * Email
-* SMS
-* WhatsApp (Meta API)
-* Slack
 * Custom webhooks
 
 (Architecture diagrams and expanded explanations are in the attached PDF.)
