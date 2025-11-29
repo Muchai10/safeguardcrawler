@@ -8,39 +8,47 @@ import { HotspotMap } from '@/components/dashboard/HotspotMap';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { TrendsChart } from '@/components/dashboard/TrendsChart';
 import { LiveAlertsPanel } from '@/components/dashboard/LiveAlertsPanel';
-import { ControlPanel } from '@/components/dashboard/ControlPanel';
-import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
 
-const fetcher = (url: string) =>
-  fetch(url).then((res) => res.json());
+// Remove unused imports (ControlPanel & TextAnalysis were not used)
+// import { ControlPanel } from '@/components/dashboard/ControlPanel';
+// import { TextAnalysis } from '@/components/dashboard/TextAnalysis';
+
+// Fixed fetcher with proper typing
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function Index() {
+  // Fetch alerts with proper typing and fallback
+  const {
+    data: alerts = [],
+    isLoading: alertsLoading,
+    error: alertsError,
+  } = useSWR<any[]>('/alerts?limit=50', fetcher, {
+    refreshInterval: 8000,
+    fallbackData: [], // prevents undefined during first load
+  });
 
-  // --- API DATA ---
-  const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useSWR(
-    '/alerts?limit=50',
-    fetcher,
-    { refreshInterval: 8000 } // auto-refresh every 8s
-  );
+  // Fetch scraper status
+  const {
+    data: status = {},
+    isLoading: statusLoading,
+    error: statusError,
+  } = useSWR<Record<string, number>>('/scraper-status', fetcher, {
+    refreshInterval: 5000,
+    fallbackData: {},
+  });
 
-  const { data: status = {}, isLoading: statusLoading, error: statusError } = useSWR(
-    '/scraper-status',
-    fetcher,
-    { refreshInterval: 5000 }
-  );
+  // Optional: log errors in dev
+  if (alertsError) console.error('Failed to load alerts:', alertsError);
+  if (statusError) console.error('Failed to load scraper status:', statusError);
 
-  if (alertsError) console.error('Alerts error:', alertsError);
-  if (statusError) console.error('Status error:', statusError);
-
-  // --- CALCULATED METRICS ---
-  const highSeverityCount = alerts.filter((a: any) => a.severity === 'high').length;
+  // Calculated metrics – safer and cleaner
+  const highSeverityCount = alerts.filter((alert) => alert.severity === 'high').length;
   const totalIncidents = alerts.length;
-  const activeAlerts = alerts.filter((a: any) => a.isActive).length || totalIncidents;
-  const activeMonitoring = Object.keys(status || {}).filter((k) => status[k] > 0).length;
+  const activeAlerts = alerts.filter((alert) => alert.isActive !== false).length;
+  const activeMonitoring = Object.values(status).filter((count) => count > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
-
       {/* HEADER */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
@@ -54,7 +62,6 @@ export default function Index() {
                 Unified Early-Warning System & Hotspot Mapping
               </p>
             </div>
-
             <div className="flex items-center gap-1 px-3 py-1 bg-green-500/10 rounded-full">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-medium text-green-700 dark:text-green-400">
@@ -65,10 +72,9 @@ export default function Index() {
         </div>
       </header>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <main className="container mx-auto px-4 py-6">
-
-        {/* STATS */}
+        {/* STAT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Active Alerts"
@@ -96,27 +102,27 @@ export default function Index() {
           />
         </div>
 
-        {/* TRENDS + ALERTS PANEL */}
+        {/* TRENDS CHART + ALERTS PANEL */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
             <TrendsChart data={alerts} />
           </div>
-          <div className="lg:col-span-1">
+          <div>
             <AlertsPanel alerts={alerts} />
           </div>
         </div>
 
-        {/* LIVE ALERTS + HOTSPOT MAP */}
+        {/* HOTSPOT MAP + LIVE ALERTS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
             <HotspotMap incidents={alerts} />
           </div>
-          <div className="lg:col-span-1">
-            <LiveAlertsPanel alerts={alerts} />
+          <div>
+            <LiveAlertsPanel/>
           </div>
         </div>
 
-        {/* FOOTER INFO */}
+        {/* SYSTEM INFO */}
         <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -131,7 +137,6 @@ export default function Index() {
             </div>
           </div>
         </div>
-
       </main>
     </div>
   );
