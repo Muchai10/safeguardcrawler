@@ -9,6 +9,8 @@ import { NewsletterSubscribe } from '@/components/NewsletterSubscribe';
 import citizensImg from '@/assets/citizens-digital.jpg';
 import safetyNetworkImg from '@/assets/safety-network.jpg';
 
+const HF_SPACE_URL = 'https://huggingface.co/spaces/Iamparody/safe-guard-crawler';
+
 const Landing = () => {
   const plugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -42,26 +44,10 @@ const Landing = () => {
   ];
 
   const features = [
-    {
-      icon: AlertTriangle,
-      title: 'Real-time Alerts',
-      description: '3-tier severity system with actionable notifications'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Trend Analysis',
-      description: 'Detect emerging patterns and narrative shifts'
-    },
-    {
-      icon: Activity,
-      title: 'Multi-lingual NLP',
-      description: 'English, Kiswahili, and Sheng language support'
-    },
-    {
-      icon: Bell,
-      title: 'Instant Notifications',
-      description: 'Dashboard and push notifications for responders'
-    }
+    { icon: AlertTriangle, title: 'Real-time Alerts', description: '3-tier severity system with actionable notifications' },
+    { icon: TrendingUp, title: 'Trend Analysis', description: 'Detect emerging patterns and narrative shifts' },
+    { icon: Activity, title: 'Multi-lingual NLP', description: 'English, Kiswahili, and Sheng language support' },
+    { icon: Bell, title: 'Instant Notifications', description: 'Dashboard and push notifications for responders' }
   ];
 
   return (
@@ -82,7 +68,9 @@ const Landing = () => {
               <Link to="/about"><Button variant="ghost" size="sm">About</Button></Link>
               <Link to="/contact"><Button variant="ghost" size="sm">Contact</Button></Link>
               <Link to="/reviews"><Button variant="ghost" size="sm">Complaints</Button></Link>
-              <Link to="/dashboard"><Button variant="outline" size="sm">Dashboard</Button></Link>
+              <a href={HF_SPACE_URL} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm">Dashboard</Button>
+              </a>
             </nav>
           </div>
         </div>
@@ -107,11 +95,11 @@ const Landing = () => {
               </Button>
             </Link>
 
-            <Link to="/dashboard" className="w-full sm:w-auto">
+            <a href={HF_SPACE_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto text-lg px-12 py-6 hover-scale shadow-lg">
                 Analytics
               </Button>
-            </Link>
+            </a>
 
             <Link to="/socials" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-10 py-6">
@@ -162,9 +150,9 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto mb-16">
             <div>
-              <img 
-                src={citizensImg} 
-                alt="Kenyan citizens using digital devices for safer communities" 
+              <img
+                src={citizensImg}
+                alt="Kenyan citizens using digital devices for safer communities"
                 className="rounded-lg shadow-xl w-full"
               />
             </div>
@@ -173,12 +161,12 @@ const Landing = () => {
                 Protecting Communities Through Technology
               </h3>
               <p className="text-lg text-muted-foreground mb-6">
-                SafeGuard Crawler monitors digital spaces to identify threats before they escalate, 
+                SafeGuard Crawler monitors digital spaces to identify threats before they escalate,
                 helping protect vulnerable communities across Kenya.
               </p>
-              <img 
-                src={safetyNetworkImg} 
-                alt="Digital safety network visualization" 
+              <img
+                src={safetyNetworkImg}
+                alt="Digital safety network visualization"
                 className="rounded-lg shadow-lg w-full"
               />
             </div>
@@ -187,12 +175,13 @@ const Landing = () => {
           <h3 className="text-3xl lg:text-4xl font-bold text-center mb-12">
             Powerful Features for Digital Safety
           </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card 
-                  key={index} 
+                <Card
+                  key={index}
                   className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/30"
                 >
                   <CardContent className="p-6">
@@ -213,9 +202,7 @@ const Landing = () => {
           <Card className="max-w-3xl mx-auto border-2 border-primary/20">
             <CardContent className="p-8 lg:p-12 text-center">
               <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-2xl lg:text-3xl font-bold mb-4">
-                Stay Updated
-              </h3>
+              <h3 className="text-2xl lg:text-3xl font-bold mb-4">Stay Updated</h3>
               <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
                 Subscribe to receive updates on new features, threat insights, and digital safety tips.
               </p>
@@ -230,19 +217,19 @@ const Landing = () => {
         <Card className="max-w-4xl mx-auto border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-8 lg:p-12 text-center">
             <Shield className="w-16 h-16 text-primary mx-auto mb-6" />
-            <h3 className="text-3xl lg:text-4xl font-bold mb-4 text-center">
+            <h3 className="text-3xl lg:text-4xl font-bold mb-4">
               Ready to Protect Your Community?
             </h3>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join digital-safety NGOs, newsroom moderators, and GBV helpline responders using SafeGuard Crawler
               to detect threats before they escalate.
             </p>
             <div className="flex justify-center">
-              <Link to="/dashboard">
+              <a href={HF_SPACE_URL} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="text-lg px-12 hover-scale">
                   Access Analytics Now
                 </Button>
-              </Link>
+              </a>
             </div>
           </CardContent>
         </Card>
