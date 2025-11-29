@@ -5,6 +5,10 @@
 SafeGuard Crawler is an ethical, AI-powered early-warning system that detects **emerging GBV threats, cyber-harassment, sextortion patterns, and online misinformation** in Kenyan digital spaces.
 It provides **4–6 hours of lead time** before harmful narratives escalate — enabling rapid response by NGOs, campus safety, newsroom moderators, and gender protection teams.
 
+The Live Links
+https://safeguardcrawler-sahw.vercel.app/
+https://huggingface.co/datasets/Iamparody/gbv-threat-alerts/tree/main
+
 ---
 
 # Key Idea
